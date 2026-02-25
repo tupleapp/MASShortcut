@@ -1,9 +1,12 @@
 #import "MASKeyCodes.h"
 
-/**
- A model class to hold a key combination.
+@class MASHIDButtonIdentifier;
 
- This class just represents a combination of keys. It does not care if
+/**
+ A model class to hold a key combination or HID device button.
+
+ This class represents either a keyboard shortcut (keyCode + modifierFlags)
+ or an HID device button (gamepad, joystick, etc.). It does not care if
  the combination is valid or can be used as a hotkey, it doesn’t watch
  the input system for the shortcut appearance, nor it does access user
  defaults.
@@ -68,6 +71,19 @@
 */
 @property (nonatomic, readonly) NSString *modifierFlagsString;
 
+/**
+ An HID button identifier, or nil for keyboard shortcuts.
+
+ When non-nil, this shortcut represents an HID device button press
+ rather than a keyboard key combination.
+*/
+@property (nonatomic, readonly, strong) MASHIDButtonIdentifier *hidButtonIdentifier;
+
+/**
+ YES if this shortcut represents an HID device button, NO for keyboard shortcuts.
+*/
+@property (nonatomic, readonly) BOOL isHIDShortcut;
+
 - (instancetype)initWithKeyCode:(NSInteger)code modifierFlags:(NSEventModifierFlags)flags;
 + (instancetype)shortcutWithKeyCode:(NSInteger)code modifierFlags:(NSEventModifierFlags)flags;
 
@@ -77,5 +93,10 @@
  This is just a convenience initializer that reads the key code and modifiers from an `NSEvent`.
 */
 + (instancetype)shortcutWithEvent:(NSEvent *)anEvent;
+
+/**
+ Creates a new shortcut from an HID device button identifier.
+*/
++ (instancetype)shortcutWithHIDButton:(MASHIDButtonIdentifier *)identifier;
 
 @end

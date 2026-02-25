@@ -1,8 +1,10 @@
 #import "MASShortcut.h"
+#import "MASHIDButtonIdentifier.h"
 #import "MASLocalization.h"
 
 static NSString *const MASShortcutKeyCode = @"KeyCode";
 static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
+static NSString *const MASShortcutHIDButton = @"MASShortcutHIDButton";
 
 @implementation MASShortcut
 
@@ -28,6 +30,27 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
     return [[self alloc] initWithKeyCode:event.keyCode modifierFlags:event.modifierFlags];
 }
 
+- (instancetype)initWithHIDButton:(MASHIDButtonIdentifier *)identifier
+{
+    self = [super init];
+    if (self) {
+        _keyCode = NSNotFound;
+        _modifierFlags = 0;
+        _hidButtonIdentifier = identifier;
+    }
+    return self;
+}
+
++ (instancetype)shortcutWithHIDButton:(MASHIDButtonIdentifier *)identifier
+{
+    return [[self alloc] initWithHIDButton:identifier];
+}
+
+- (BOOL)isHIDShortcut
+{
+    return (_hidButtonIdentifier != nil);
+}
+
 #pragma mark Shortcut Accessors
 
 - (UInt32)carbonKeyCode
@@ -42,6 +65,9 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (NSString *)description
 {
+    if (self.isHIDShortcut) {
+        return [_hidButtonIdentifier displayString];
+    }
     return [NSString stringWithFormat:@"%@%@", self.modifierFlagsString, self.keyCodeString];
 }
 
@@ -80,6 +106,10 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (NSString *)keyCodeString
 {
+    if (self.isHIDShortcut) {
+        return [_hidButtonIdentifier displayString];
+    }
+
     // Some key codes don't have an equivalent
     switch (self.keyCode) {
         case NSNotFound: return @"";
@@ -183,6 +213,10 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (NSString *)modifierFlagsString
 {
+    if (self.isHIDShortcut) {
+        return @"";
+    }
+
     unichar chars[4];
     NSUInteger count = 0;
     // These are in the same order as the menu manager shows them
@@ -197,13 +231,20 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (BOOL) isEqual: (MASShortcut*) object
 {
-    return [object isKindOfClass:[self class]]
-        && (object.keyCode == self.keyCode)
+    if (![object isKindOfClass:[self class]]) return NO;
+    if (self.isHIDShortcut != object.isHIDShortcut) return NO;
+    if (self.isHIDShortcut) {
+        return [_hidButtonIdentifier isEqual:object.hidButtonIdentifier];
+    }
+    return (object.keyCode == self.keyCode)
         && (object.modifierFlags == self.modifierFlags);
 }
 
 - (NSUInteger) hash
 {
+    if (self.isHIDShortcut) {
+        return _hidButtonIdentifier.hash;
+    }
     return self.keyCode + self.modifierFlags;
 }
 
@@ -211,6 +252,9 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (void)encodeWithCoder:(NSCoder *)coder
 {
+    if (self.isHIDShortcut) {
+        [coder encodeObject:_hidButtonIdentifier forKey:MASShortcutHIDButton];
+    }
     [coder encodeInteger:(self.keyCode != NSNotFound ? self.keyCode : - 1) forKey:MASShortcutKeyCode];
     [coder encodeInteger:(NSInteger)self.modifierFlags forKey:MASShortcutModifierFlags];
 }
@@ -219,9 +263,16 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 {
     self = [super init];
     if (self) {
-        NSInteger code = [decoder decodeIntegerForKey:MASShortcutKeyCode];
-        _keyCode = (code < 0) ? NSNotFound : code;
-        _modifierFlags = [decoder decodeIntegerForKey:MASShortcutModifierFlags];
+        MASHIDButtonIdentifier *hidButton = [decoder decodeObjectOfClass:[MASHIDButtonIdentifier class] forKey:MASShortcutHIDButton];
+        if (hidButton) {
+            _hidButtonIdentifier = hidButton;
+            _keyCode = NSNotFound;
+            _modifierFlags = 0;
+        } else {
+            NSInteger code = [decoder decodeIntegerForKey:MASShortcutKeyCode];
+            _keyCode = (code < 0) ? NSNotFound : code;
+            _modifierFlags = [decoder decodeIntegerForKey:MASShortcutModifierFlags];
+        }
     }
     return self;
 }
@@ -237,6 +288,9 @@ static NSString *const MASShortcutModifierFlags = @"ModifierFlags";
 
 - (instancetype) copyWithZone:(NSZone *)zone
 {
+    if (self.isHIDShortcut) {
+        return [[self class] shortcutWithHIDButton:[_hidButtonIdentifier copy]];
+    }
     return [[self class] shortcutWithKeyCode:_keyCode modifierFlags:_modifierFlags];
 }
 

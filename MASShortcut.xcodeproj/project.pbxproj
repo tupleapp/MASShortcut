@@ -44,6 +44,11 @@
 		0DC2F190199372B4003A0131 /* MASDictionaryTransformerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 0DC2F18F199372B4003A0131 /* MASDictionaryTransformerTests.m */; };
 		0DC2F19819938EFA003A0131 /* MASShortcutView+Bindings.h in Headers */ = {isa = PBXBuildFile; fileRef = 0DC2F19619938EFA003A0131 /* MASShortcutView+Bindings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0DC2F19919938EFA003A0131 /* MASShortcutView+Bindings.m in Sources */ = {isa = PBXBuildFile; fileRef = 0DC2F19719938EFA003A0131 /* MASShortcutView+Bindings.m */; };
+		AA0002000000000000000001 /* MASHIDButtonIdentifier.h in Headers */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000001 /* MASHIDButtonIdentifier.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AA0002000000000000000002 /* MASHIDButtonIdentifier.m in Sources */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000002 /* MASHIDButtonIdentifier.m */; };
+		AA0002000000000000000003 /* MASHIDMonitor.h in Headers */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000003 /* MASHIDMonitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AA0002000000000000000004 /* MASHIDMonitor.m in Sources */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000004 /* MASHIDMonitor.m */; };
+		AA0002000000000000000005 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA0001000000000000000005 /* IOKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,6 +141,11 @@
 		EAFFDC811AACFF3300F38834 /* MASShortcut.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = MASShortcut.modulemap; sourceTree = "<group>"; };
 		ED8737791BCE459800BB1716 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FDFF016F20CB2FB400CC88F3 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0001000000000000000001 /* MASHIDButtonIdentifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MASHIDButtonIdentifier.h; sourceTree = "<group>"; };
+		AA0001000000000000000002 /* MASHIDButtonIdentifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MASHIDButtonIdentifier.m; sourceTree = "<group>"; };
+		AA0001000000000000000003 /* MASHIDMonitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MASHIDMonitor.h; sourceTree = "<group>"; };
+		AA0001000000000000000004 /* MASHIDMonitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MASHIDMonitor.m; sourceTree = "<group>"; };
+		AA0001000000000000000005 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +154,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D827CD71990D4420010B8EF /* Cocoa.framework in Frameworks */,
+				AA0002000000000000000005 /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,6 +207,7 @@
 				0D827CD91990D4420010B8EF /* Foundation.framework */,
 				0D827CDA1990D4420010B8EF /* CoreData.framework */,
 				0D827CDB1990D4420010B8EF /* AppKit.framework */,
+				AA0001000000000000000005 /* IOKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -252,6 +264,8 @@
 			children = (
 				0DA8BCFB1DC37D8000C96EB9 /* MASKeyMasks.h */,
 				0D827D9619910FF70010B8EF /* MASKeyCodes.h */,
+				AA0001000000000000000001 /* MASHIDButtonIdentifier.h */,
+				AA0001000000000000000002 /* MASHIDButtonIdentifier.m */,
 				0D827D1B1990D55E0010B8EF /* MASShortcut.h */,
 				0D827D1C1990D55E0010B8EF /* MASShortcut.m */,
 				0D827D9319910B740010B8EF /* MASShortcutTests.m */,
@@ -267,6 +281,8 @@
 				0DC2F17419922798003A0131 /* MASHotKey.h */,
 				0DC2F17519922798003A0131 /* MASHotKey.m */,
 				0D39DCA11A668A4400639145 /* MASHotKeyTests.m */,
+				AA0001000000000000000003 /* MASHIDMonitor.h */,
+				AA0001000000000000000004 /* MASHIDMonitor.m */,
 				0D827DA319912D240010B8EF /* MASShortcutMonitor.h */,
 				0D827DA419912D240010B8EF /* MASShortcutMonitor.m */,
 				0D39DCA31A668E5500639145 /* MASShortcutMonitorTests.m */,
@@ -309,12 +325,14 @@
 			files = (
 				0DA8BCFC1DC37D8000C96EB9 /* MASKeyMasks.h in Headers */,
 				0D827D9719910FF70010B8EF /* MASKeyCodes.h in Headers */,
+				AA0002000000000000000001 /* MASHIDButtonIdentifier.h in Headers */,
 				0D827D2B1990D55E0010B8EF /* MASShortcutView.h in Headers */,
 				0D827D99199110F60010B8EF /* Prefix.pch in Headers */,
 				0D827D251990D55E0010B8EF /* MASShortcut.h in Headers */,
 				0DC2F19819938EFA003A0131 /* MASShortcutView+Bindings.h in Headers */,
 				0D827D9E19911A190010B8EF /* MASShortcutValidator.h in Headers */,
 				0DC2F18D1993708A003A0131 /* MASDictionaryTransformer.h in Headers */,
+				AA0002000000000000000003 /* MASHIDMonitor.h in Headers */,
 				0D827DA519912D240010B8EF /* MASShortcutMonitor.h in Headers */,
 				0D827DAD199132840010B8EF /* MASShortcutBinder.h in Headers */,
 				0D2CAB191B8339F4005431FC /* MASLocalization.h in Headers */,
@@ -461,7 +479,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				0DC2F17719922798003A0131 /* MASHotKey.m in Sources */,
+				AA0002000000000000000002 /* MASHIDButtonIdentifier.m in Sources */,
 				0D827D9F19911A190010B8EF /* MASShortcutValidator.m in Sources */,
+				AA0002000000000000000004 /* MASHIDMonitor.m in Sources */,
 				0DC2F17C199232EA003A0131 /* MASShortcutMonitor.m in Sources */,
 				0D827D2C1990D55E0010B8EF /* MASShortcutView.m in Sources */,
 				0D827D261990D55E0010B8EF /* MASShortcut.m in Sources */,

@@ -1,5 +1,6 @@
 #import "MASShortcutMonitor.h"
 #import "MASHotKey.h"
+#import "MASHIDMonitor.h"
 
 @interface MASShortcutMonitor ()
 @property(assign) EventHandlerRef eventHandlerRef;
@@ -47,6 +48,10 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
 
 - (BOOL) registerShortcut: (MASShortcut*) shortcut withAction: (dispatch_block_t) action
 {
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] registerHIDButton:shortcut.hidButtonIdentifier withAction:action];
+    }
+
     MASHotKey *hotKey = [MASHotKey registeredHotKeyWithShortcut:shortcut];
     if (hotKey) {
         [hotKey setAction:action];
@@ -60,17 +65,25 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
 - (void) unregisterShortcut: (MASShortcut*) shortcut
 {
     if (shortcut) {
-        [_hotKeys removeObjectForKey:shortcut];
+        if (shortcut.isHIDShortcut) {
+            [[MASHIDMonitor sharedMonitor] unregisterHIDButton:shortcut.hidButtonIdentifier];
+        } else {
+            [_hotKeys removeObjectForKey:shortcut];
+        }
     }
 }
 
 - (void) unregisterAllShortcuts
 {
     [_hotKeys removeAllObjects];
+    [[MASHIDMonitor sharedMonitor] unregisterAllHIDButtons];
 }
 
 - (BOOL) isShortcutRegistered: (MASShortcut*) shortcut
 {
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] isHIDButtonRegistered:shortcut.hidButtonIdentifier];
+    }
     return !![_hotKeys objectForKey:shortcut];
 }
 

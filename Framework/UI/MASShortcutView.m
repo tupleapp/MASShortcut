@@ -1,5 +1,6 @@
 #import "MASShortcutView.h"
 #import "MASShortcutValidator.h"
+#import "MASHIDMonitor.h"
 #import "MASLocalization.h"
 
 NSString *const MASShortcutBinding = @"shortcutValue";
@@ -240,7 +241,7 @@ static const CGFloat MASButtonFontSize = 11;
                               ? MASLocalizedString(@"Use Old Shortcut", @"Cancel action button for non-empty shortcut in recording state")
                               : (self.shortcutPlaceholder.length > 0
                                  ? self.shortcutPlaceholder
-                                 : MASLocalizedString(@"Type New Shortcut", @"Non-empty shortcut button in recording state")))
+                                 : MASLocalizedString(@"Type Shortcut or Press Device Button", @"Non-empty shortcut button in recording state")))
                            : _shortcutValue ? _shortcutValue.description : @"");
         [self drawInRect:shortcutRect withTitle:title alignment:NSTextAlignmentCenter state:self.isRecording ? NSOnState : NSOffState];
     }
@@ -255,7 +256,7 @@ static const CGFloat MASButtonFontSize = 11;
                                ? MASLocalizedString(@"Cancel", @"Cancel action button in recording state")
                                : (self.shortcutPlaceholder.length > 0
                                   ? self.shortcutPlaceholder
-                                  : MASLocalizedString(@"Type Shortcut", @"Empty shortcut button in recording state")));
+                                  : MASLocalizedString(@"Type Shortcut or Press Device Button", @"Empty shortcut button in recording state")));
             [self drawInRect:shortcutRect withTitle:title alignment:NSTextAlignmentCenter state:NSOnState];
         }
         else
@@ -430,7 +431,7 @@ void *kUserDataHint = &kUserDataHint;
     static BOOL isActive = NO;
     if (isActive == shouldActivate) return;
     isActive = shouldActivate;
-    
+
     static id eventMonitor = nil;
     if (shouldActivate) {
         __unsafe_unretained MASShortcutView *weakSelf = self;
@@ -504,9 +505,18 @@ void *kUserDataHint = &kUserDataHint;
             }
             return event;
         }];
+
+        // Start parallel HID capture — first input (keyboard or HID) wins
+        [[MASHIDMonitor sharedMonitor] captureNextButtonPress:^(MASHIDButtonIdentifier *identifier) {
+            MASShortcut *hidShortcut = [MASShortcut shortcutWithHIDButton:identifier];
+            weakSelf.shortcutValue = hidShortcut;
+            weakSelf.recording = NO;
+        }];
     }
     else {
         [NSEvent removeMonitor:eventMonitor];
+        // Cancel HID capture when deactivating
+        [[MASHIDMonitor sharedMonitor] captureNextButtonPress:nil];
     }
 }
 
