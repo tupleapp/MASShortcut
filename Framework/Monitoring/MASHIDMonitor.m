@@ -132,12 +132,16 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
     NSInteger productID = [(__bridge NSNumber *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductIDKey)) integerValue];
     NSString *deviceName = (__bridge NSString *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
 
+    NSString *serialNumber = (__bridge NSString *)IOHIDDeviceGetProperty(device, CFSTR(kIOHIDSerialNumberKey));
+    if (serialNumber.length == 0) serialNumber = nil;
+
     MASHIDButtonIdentifier *identifier =
         [MASHIDButtonIdentifier identifierWithVendorID:vendorID
                                              productID:productID
                                              usagePage:usagePage
                                                  usage:usage
-                                            deviceName:deviceName];
+                                            deviceName:deviceName
+                                          serialNumber:serialNumber];
 
     // Capture mode takes priority — press only
     if (intValue > 0 && self.captureCallback) {
@@ -149,8 +153,11 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
         return;
     }
 
-    // Look up registered actions
+    // Two-tier lookup: exact match first, then fallback without serial number
     NSDictionary *actions = _registeredButtons[identifier];
+    if (!actions && serialNumber != nil) {
+        actions = _registeredButtons[[identifier identifierWithoutSerialNumber]];
+    }
     if (!actions) return;
 
     if (intValue > 0) {

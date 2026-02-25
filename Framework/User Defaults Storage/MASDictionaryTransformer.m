@@ -12,6 +12,7 @@ static NSString *const MASHIDProductIDKey = @"productID";
 static NSString *const MASHIDUsagePageKey = @"usagePage";
 static NSString *const MASHIDUsageKey = @"usage";
 static NSString *const MASHIDDeviceNameKey = @"deviceName";
+static NSString *const MASHIDSerialNumberKey = @"serialNumber";
 
 @implementation MASDictionaryTransformer
 
@@ -36,6 +37,9 @@ static NSString *const MASHIDDeviceNameKey = @"deviceName";
         hidDict[MASHIDUsageKey] = @(hid.usage);
         if (hid.deviceName) {
             hidDict[MASHIDDeviceNameKey] = hid.deviceName;
+        }
+        if (hid.serialNumber) {
+            hidDict[MASHIDSerialNumberKey] = hid.serialNumber;
         }
         return @{ MASHIDButtonKey: [hidDict copy] };
     } else {
@@ -68,12 +72,17 @@ static NSString *const MASHIDDeviceNameKey = @"deviceName";
             if (![deviceName isKindOfClass:[NSString class]]) {
                 deviceName = nil;
             }
+            NSString *serialNumber = hidDict[MASHIDSerialNumberKey];
+            if (![serialNumber isKindOfClass:[NSString class]]) {
+                serialNumber = nil;
+            }
             MASHIDButtonIdentifier *identifier =
                 [MASHIDButtonIdentifier identifierWithVendorID:[vendorBox integerValue]
                                                      productID:[productBox integerValue]
                                                      usagePage:[usagePageBox integerValue]
                                                          usage:[usageBox integerValue]
-                                                    deviceName:deviceName];
+                                                    deviceName:deviceName
+                                                  serialNumber:serialNumber];
             return [MASShortcut shortcutWithHIDButton:identifier];
         }
         return nil;
