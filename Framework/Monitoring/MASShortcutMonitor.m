@@ -17,9 +17,12 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
 {
     self = [super init];
     [self setHotKeys:[NSMutableDictionary dictionary]];
-    EventTypeSpec hotKeyPressedSpec = { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyPressed };
+    EventTypeSpec hotKeySpecs[] = {
+        { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyPressed },
+        { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyReleased },
+    };
     OSStatus status = InstallEventHandler(GetEventDispatcherTarget(), MASCarbonEventCallback,
-        1, &hotKeyPressedSpec, (__bridge void*)self, &_eventHandlerRef);
+        2, hotKeySpecs, (__bridge void*)self, &_eventHandlerRef);
     if (status != noErr) {
         return nil;
     }
@@ -55,6 +58,23 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
     MASHotKey *hotKey = [MASHotKey registeredHotKeyWithShortcut:shortcut];
     if (hotKey) {
         [hotKey setAction:action];
+        [_hotKeys setObject:hotKey forKey:shortcut];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+- (BOOL) registerShortcut: (MASShortcut*) shortcut withKeyDownAction: (dispatch_block_t) keyDown keyUpAction: (dispatch_block_t) keyUp
+{
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] registerHIDButton:shortcut.hidButtonIdentifier withKeyDownAction:keyDown keyUpAction:keyUp];
+    }
+
+    MASHotKey *hotKey = [MASHotKey registeredHotKeyWithShortcut:shortcut];
+    if (hotKey) {
+        [hotKey setAction:keyDown];
+        [hotKey setKeyUpAction:keyUp];
         [_hotKeys setObject:hotKey forKey:shortcut];
         return YES;
     } else {
@@ -101,10 +121,18 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
         return;
     }
 
+    UInt32 eventKind = GetEventKind(event);
+
     [_hotKeys enumerateKeysAndObjectsUsingBlock:^(MASShortcut *shortcut, MASHotKey *hotKey, BOOL *stop) {
         if (hotKeyID.id == [hotKey carbonID]) {
-            if ([hotKey action]) {
-                dispatch_async(dispatch_get_main_queue(), [hotKey action]);
+            if (eventKind == kEventHotKeyPressed) {
+                if ([hotKey action]) {
+                    dispatch_async(dispatch_get_main_queue(), [hotKey action]);
+                }
+            } else if (eventKind == kEventHotKeyReleased) {
+                if ([hotKey keyUpAction]) {
+                    dispatch_async(dispatch_get_main_queue(), [hotKey keyUpAction]);
+                }
             }
             *stop = YES;
         }

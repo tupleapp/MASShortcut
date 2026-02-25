@@ -52,6 +52,18 @@
         options:_bindingOptions];
 }
 
+- (void) bindShortcutWithDefaultsKey: (NSString*) defaultsKeyName toKeyDownAction: (dispatch_block_t) keyDown keyUpAction: (dispatch_block_t) keyUp
+{
+    NSMutableDictionary *actionPair = [NSMutableDictionary dictionary];
+    if (keyDown) actionPair[@"keyDown"] = [keyDown copy];
+    if (keyUp) actionPair[@"keyUp"] = [keyUp copy];
+    [_actions setObject:[actionPair copy] forKey:defaultsKeyName];
+    [self bind:defaultsKeyName
+        toObject:[NSUserDefaultsController sharedUserDefaultsController]
+        withKeyPath:[@"values." stringByAppendingString:defaultsKeyName]
+        options:_bindingOptions];
+}
+
 - (void) breakBindingWithDefaultsKey: (NSString*) defaultsKeyName
 {
     [_shortcutMonitor unregisterShortcut:[_shortcuts objectForKey:defaultsKeyName]];
@@ -115,7 +127,13 @@
 
     // Bind new shortcut
     [_shortcuts setObject:newShortcut forKey:key];
-    [_shortcutMonitor registerShortcut:newShortcut withAction:[_actions objectForKey:key]];
+    id storedAction = [_actions objectForKey:key];
+    if ([storedAction isKindOfClass:[NSDictionary class]]) {
+        NSDictionary *actionPair = storedAction;
+        [_shortcutMonitor registerShortcut:newShortcut withKeyDownAction:actionPair[@"keyDown"] keyUpAction:actionPair[@"keyUp"]];
+    } else {
+        [_shortcutMonitor registerShortcut:newShortcut withAction:storedAction];
+    }
 }
 
 @end

@@ -20,6 +20,12 @@
 - (BOOL)registerHIDButton:(MASHIDButtonIdentifier *)identifier withAction:(dispatch_block_t)action;
 
 /**
+ Register an HID button with separate actions for press and release.
+ Returns YES on success.
+*/
+- (BOOL)registerHIDButton:(MASHIDButtonIdentifier *)identifier withKeyDownAction:(dispatch_block_t)keyDown keyUpAction:(dispatch_block_t)keyUp;
+
+/**
  Unregister a previously registered HID button.
 */
 - (void)unregisterHIDButton:(MASHIDButtonIdentifier *)identifier;

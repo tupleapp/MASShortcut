@@ -4,7 +4,7 @@
 
 @interface MASHIDMonitor ()
 @property (nonatomic, assign) IOHIDManagerRef hidManager;
-@property (nonatomic, strong) NSMutableDictionary<MASHIDButtonIdentifier *, dispatch_block_t> *registeredButtons;
+@property (nonatomic, strong) NSMutableDictionary<MASHIDButtonIdentifier *, NSDictionary *> *registeredButtons;
 @property (nonatomic, copy) void (^captureCallback)(MASHIDButtonIdentifier *);
 @end
 
@@ -75,7 +75,17 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
 - (BOOL)registerHIDButton:(MASHIDButtonIdentifier *)identifier withAction:(dispatch_block_t)action
 {
     if (!identifier || !action) return NO;
-    _registeredButtons[identifier] = [action copy];
+    _registeredButtons[identifier] = @{ @"keyDown": [action copy] };
+    return YES;
+}
+
+- (BOOL)registerHIDButton:(MASHIDButtonIdentifier *)identifier withKeyDownAction:(dispatch_block_t)keyDown keyUpAction:(dispatch_block_t)keyUp
+{
+    if (!identifier || (!keyDown && !keyUp)) return NO;
+    NSMutableDictionary *actions = [NSMutableDictionary dictionary];
+    if (keyDown) actions[@"keyDown"] = [keyDown copy];
+    if (keyUp) actions[@"keyUp"] = [keyUp copy];
+    _registeredButtons[identifier] = [actions copy];
     return YES;
 }
 
@@ -110,12 +120,10 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
     IOHIDElementRef element = IOHIDValueGetElement(value);
     uint32_t usagePage = IOHIDElementGetUsagePage(element);
 
-    // Only handle button page presses
+    // Only handle button page events
     if (usagePage != kHIDPage_Button) return;
 
-    // Only handle press (value > 0), not release
     CFIndex intValue = IOHIDValueGetIntegerValue(value);
-    if (intValue <= 0) return;
 
     uint32_t usage = IOHIDElementGetUsage(element);
     IOHIDDeviceRef device = IOHIDElementGetDevice(element);
@@ -131,8 +139,8 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
                                                  usage:usage
                                             deviceName:deviceName];
 
-    // Capture mode takes priority
-    if (self.captureCallback) {
+    // Capture mode takes priority — press only
+    if (intValue > 0 && self.captureCallback) {
         void (^callback)(MASHIDButtonIdentifier *) = self.captureCallback;
         self.captureCallback = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -141,10 +149,20 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
         return;
     }
 
-    // Look up registered action
-    dispatch_block_t action = _registeredButtons[identifier];
-    if (action) {
-        dispatch_async(dispatch_get_main_queue(), action);
+    // Look up registered actions
+    NSDictionary *actions = _registeredButtons[identifier];
+    if (!actions) return;
+
+    if (intValue > 0) {
+        dispatch_block_t keyDown = actions[@"keyDown"];
+        if (keyDown) {
+            dispatch_async(dispatch_get_main_queue(), keyDown);
+        }
+    } else {
+        dispatch_block_t keyUp = actions[@"keyUp"];
+        if (keyUp) {
+            dispatch_async(dispatch_get_main_queue(), keyUp);
+        }
     }
 }
 
