@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  Identifies a specific button on a specific HID device (gamepad, joystick, etc.).
 
@@ -56,3 +58,5 @@
 - (NSString *)displayString;
 
 @end
+
+NS_ASSUME_NONNULL_END
