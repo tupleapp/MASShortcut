@@ -49,7 +49,7 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
     _hidManager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     if (!_hidManager) return;
 
-    // Match joysticks, gamepads, and multi-axis controllers on the Generic Desktop usage page
+    // Match joysticks, gamepads, multi-axis controllers, and assistive devices on the Generic Desktop usage page
     NSDictionary *joystick = @{
         @(kIOHIDDeviceUsagePageKey): @(kHIDPage_GenericDesktop),
         @(kIOHIDDeviceUsageKey): @(kHIDUsage_GD_Joystick)
@@ -62,7 +62,11 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
         @(kIOHIDDeviceUsagePageKey): @(kHIDPage_GenericDesktop),
         @(kIOHIDDeviceUsageKey): @(kHIDUsage_GD_MultiAxisController)
     };
-    NSArray *matchingCriteria = @[joystick, gamepad, multiAxis];
+    NSDictionary *assistive = @{
+        @(kIOHIDDeviceUsagePageKey): @(kHIDPage_GenericDesktop),
+        @(kIOHIDDeviceUsageKey): @(kHIDUsage_GD_AssistiveControl)
+    };
+    NSArray *matchingCriteria = @[joystick, gamepad, multiAxis, assistive];
 
     IOHIDManagerSetDeviceMatchingMultiple(_hidManager, (__bridge CFArrayRef)matchingCriteria);
     IOHIDManagerRegisterInputValueCallback(_hidManager, MASHIDInputValueCallback, (__bridge void *)self);
