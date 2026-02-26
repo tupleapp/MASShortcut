@@ -201,6 +201,8 @@ static const CGFloat MASButtonFontSize = 11;
     _shortcutCell.alignment = alignment;
     _shortcutCell.state = state;
     _shortcutCell.enabled = self.enabled;
+    
+    _shortcutCell.lineBreakMode = NSLineBreakByTruncatingMiddle;
 
     switch (_style) {
         case MASShortcutViewStyleDefault: {
