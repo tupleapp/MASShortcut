@@ -243,7 +243,7 @@ static const CGFloat MASButtonFontSize = 11;
                               ? MASLocalizedString(@"Use Old Shortcut", @"Cancel action button for non-empty shortcut in recording state")
                               : (self.shortcutPlaceholder.length > 0
                                  ? self.shortcutPlaceholder
-                                 : MASLocalizedString(@"Type Shortcut or Press Device Button", @"Non-empty shortcut button in recording state")))
+                                 : MASLocalizedString(@"Type New Shortcut", @"Non-empty shortcut button in recording state")))
                            : _shortcutValue ? _shortcutValue.description : @"");
         [self drawInRect:shortcutRect withTitle:title alignment:NSTextAlignmentCenter state:self.isRecording ? NSOnState : NSOffState];
     }
@@ -258,7 +258,7 @@ static const CGFloat MASButtonFontSize = 11;
                                ? MASLocalizedString(@"Cancel", @"Cancel action button in recording state")
                                : (self.shortcutPlaceholder.length > 0
                                   ? self.shortcutPlaceholder
-                                  : MASLocalizedString(@"Type Shortcut or Press Device Button", @"Empty shortcut button in recording state")));
+                                  : MASLocalizedString(@"Type New Shortcut", @"Empty shortcut button in recording state")));
             [self drawInRect:shortcutRect withTitle:title alignment:NSTextAlignmentCenter state:NSOnState];
         }
         else
