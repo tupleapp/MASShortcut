@@ -151,9 +151,7 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
     if (intValue > 0 && self.captureCallback) {
         void (^callback)(MASHIDButtonIdentifier *) = self.captureCallback;
         self.captureCallback = nil;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            callback(identifier);
-        });
+        callback(identifier);
         return;
     }
 
@@ -167,12 +165,12 @@ static void MASHIDInputValueCallback(void *context, IOReturn result, void *sende
     if (intValue > 0) {
         dispatch_block_t keyDown = actions[@"keyDown"];
         if (keyDown) {
-            dispatch_async(dispatch_get_main_queue(), keyDown);
+            keyDown();
         }
     } else {
         dispatch_block_t keyUp = actions[@"keyUp"];
         if (keyUp) {
-            dispatch_async(dispatch_get_main_queue(), keyUp);
+            keyUp();
         }
     }
 }

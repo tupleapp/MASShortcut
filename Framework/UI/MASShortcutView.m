@@ -436,7 +436,7 @@ void *kUserDataHint = &kUserDataHint;
 
     static id eventMonitor = nil;
     if (shouldActivate) {
-        __unsafe_unretained MASShortcutView *weakSelf = self;
+        __weak MASShortcutView *weakSelf = self;
         NSEventMask eventMask = (NSEventMaskKeyDown | NSEventMaskFlagsChanged);
         eventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:eventMask handler:^(NSEvent *event) {
 
@@ -531,7 +531,7 @@ void *kUserDataHint = &kUserDataHint;
     static id observer = nil;
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     if (shouldActivate) {
-        __unsafe_unretained MASShortcutView *weakSelf = self;
+        __weak MASShortcutView *weakSelf = self;
         observer = [notificationCenter addObserverForName:NSWindowDidResignKeyNotification object:self.window
                                                 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
                                                     weakSelf.recording = NO;
