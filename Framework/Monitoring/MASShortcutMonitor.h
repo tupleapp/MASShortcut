@@ -19,6 +19,7 @@
  It may burn your house or cut your fingers. You have been warned.
 */
 - (BOOL) registerShortcut: (MASShortcut*) shortcut withAction: (dispatch_block_t) action;
+- (BOOL) registerShortcut: (MASShortcut*) shortcut withKeyDownAction: (dispatch_block_t) keyDown keyUpAction: (dispatch_block_t) keyUp;
 - (BOOL) isShortcutRegistered: (MASShortcut*) shortcut;
 
 - (void) unregisterShortcut: (MASShortcut*) shortcut;

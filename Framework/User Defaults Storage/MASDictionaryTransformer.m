@@ -1,10 +1,18 @@
 #import "MASDictionaryTransformer.h"
 #import "MASShortcut.h"
+#import "MASHIDButtonIdentifier.h"
 
 NSString *const MASDictionaryTransformerName = @"MASDictionaryTransformer";
 
 static NSString *const MASKeyCodeKey = @"keyCode";
 static NSString *const MASModifierFlagsKey = @"modifierFlags";
+static NSString *const MASHIDButtonKey = @"hidButton";
+static NSString *const MASHIDVendorIDKey = @"vendorID";
+static NSString *const MASHIDProductIDKey = @"productID";
+static NSString *const MASHIDUsagePageKey = @"usagePage";
+static NSString *const MASHIDUsageKey = @"usage";
+static NSString *const MASHIDDeviceNameKey = @"deviceName";
+static NSString *const MASHIDSerialNumberKey = @"serialNumber";
 
 @implementation MASDictionaryTransformer
 
@@ -20,6 +28,20 @@ static NSString *const MASModifierFlagsKey = @"modifierFlags";
 {
     if (shortcut == nil) {
         return [NSDictionary dictionary];
+    } else if (shortcut.isHIDShortcut) {
+        MASHIDButtonIdentifier *hid = shortcut.hidButtonIdentifier;
+        NSMutableDictionary *hidDict = [NSMutableDictionary dictionary];
+        hidDict[MASHIDVendorIDKey] = @(hid.vendorID);
+        hidDict[MASHIDProductIDKey] = @(hid.productID);
+        hidDict[MASHIDUsagePageKey] = @(hid.usagePage);
+        hidDict[MASHIDUsageKey] = @(hid.usage);
+        if (hid.deviceName) {
+            hidDict[MASHIDDeviceNameKey] = hid.deviceName;
+        }
+        if (hid.serialNumber) {
+            hidDict[MASHIDSerialNumberKey] = hid.serialNumber;
+        }
+        return @{ MASHIDButtonKey: [hidDict copy] };
     } else {
         return @{
             MASKeyCodeKey: @([shortcut keyCode]),
@@ -35,6 +57,38 @@ static NSString *const MASModifierFlagsKey = @"modifierFlags";
         return nil;
     }
 
+    // Check for HID button data first
+    NSDictionary *hidDict = [dictionary objectForKey:MASHIDButtonKey];
+    if ([hidDict isKindOfClass:[NSDictionary class]]) {
+        SEL integerValue = @selector(integerValue);
+        id vendorBox = hidDict[MASHIDVendorIDKey];
+        id productBox = hidDict[MASHIDProductIDKey];
+        id usagePageBox = hidDict[MASHIDUsagePageKey];
+        id usageBox = hidDict[MASHIDUsageKey];
+
+        if ([vendorBox respondsToSelector:integerValue] && [productBox respondsToSelector:integerValue]
+            && [usagePageBox respondsToSelector:integerValue] && [usageBox respondsToSelector:integerValue]) {
+            NSString *deviceName = hidDict[MASHIDDeviceNameKey];
+            if (![deviceName isKindOfClass:[NSString class]]) {
+                deviceName = nil;
+            }
+            NSString *serialNumber = hidDict[MASHIDSerialNumberKey];
+            if (![serialNumber isKindOfClass:[NSString class]]) {
+                serialNumber = nil;
+            }
+            MASHIDButtonIdentifier *identifier =
+                [MASHIDButtonIdentifier identifierWithVendorID:[vendorBox integerValue]
+                                                     productID:[productBox integerValue]
+                                                     usagePage:[usagePageBox integerValue]
+                                                         usage:[usageBox integerValue]
+                                                    deviceName:deviceName
+                                                  serialNumber:serialNumber];
+            return [MASShortcut shortcutWithHIDButton:identifier];
+        }
+        return nil;
+    }
+
+    // Fall through to existing keyboard shortcut path
     id keyCodeBox = [dictionary objectForKey:MASKeyCodeKey];
     id modifierFlagsBox = [dictionary objectForKey:MASModifierFlagsKey];
 

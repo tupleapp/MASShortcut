@@ -15,6 +15,8 @@
 
 - (BOOL) isShortcutValid: (MASShortcut*) shortcut
 {
+    if (shortcut.isHIDShortcut) return YES;
+
     NSInteger keyCode = [shortcut keyCode];
     NSEventModifierFlags modifiers = [shortcut modifierFlags];
 
@@ -81,6 +83,8 @@
 
 - (BOOL) isShortcutAlreadyTakenBySystem: (MASShortcut*) shortcut explanation: (NSString**) explanation
 {
+    if (shortcut.isHIDShortcut) return NO;
+
     CFArrayRef globalHotKeys;
     if (CopySymbolicHotKeys(&globalHotKeys) == noErr) {
 

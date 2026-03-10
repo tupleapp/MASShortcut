@@ -1,5 +1,6 @@
 #import "MASShortcutMonitor.h"
 #import "MASHotKey.h"
+#import "MASHIDMonitor.h"
 
 @interface MASShortcutMonitor ()
 @property(assign) EventHandlerRef eventHandlerRef;
@@ -16,9 +17,12 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
 {
     self = [super init];
     [self setHotKeys:[NSMutableDictionary dictionary]];
-    EventTypeSpec hotKeyPressedSpec = { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyPressed };
+    EventTypeSpec hotKeySpecs[] = {
+        { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyPressed },
+        { .eventClass = kEventClassKeyboard, .eventKind = kEventHotKeyReleased },
+    };
     OSStatus status = InstallEventHandler(GetEventDispatcherTarget(), MASCarbonEventCallback,
-        1, &hotKeyPressedSpec, (__bridge void*)self, &_eventHandlerRef);
+        2, hotKeySpecs, (__bridge void*)self, &_eventHandlerRef);
     if (status != noErr) {
         return nil;
     }
@@ -47,6 +51,10 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
 
 - (BOOL) registerShortcut: (MASShortcut*) shortcut withAction: (dispatch_block_t) action
 {
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] registerHIDButton:shortcut.hidButtonIdentifier withAction:action];
+    }
+
     MASHotKey *hotKey = [MASHotKey registeredHotKeyWithShortcut:shortcut];
     if (hotKey) {
         [hotKey setAction:action];
@@ -57,20 +65,45 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
     }
 }
 
+- (BOOL) registerShortcut: (MASShortcut*) shortcut withKeyDownAction: (dispatch_block_t) keyDown keyUpAction: (dispatch_block_t) keyUp
+{
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] registerHIDButton:shortcut.hidButtonIdentifier withKeyDownAction:keyDown keyUpAction:keyUp];
+    }
+
+    MASHotKey *hotKey = [MASHotKey registeredHotKeyWithShortcut:shortcut];
+    if (hotKey) {
+        [hotKey setAction:keyDown];
+        [hotKey setKeyUpAction:keyUp];
+        [_hotKeys setObject:hotKey forKey:shortcut];
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
 - (void) unregisterShortcut: (MASShortcut*) shortcut
 {
     if (shortcut) {
-        [_hotKeys removeObjectForKey:shortcut];
+        if (shortcut.isHIDShortcut) {
+            [[MASHIDMonitor sharedMonitor] unregisterHIDButton:shortcut.hidButtonIdentifier];
+        } else {
+            [_hotKeys removeObjectForKey:shortcut];
+        }
     }
 }
 
 - (void) unregisterAllShortcuts
 {
     [_hotKeys removeAllObjects];
+    [[MASHIDMonitor sharedMonitor] unregisterAllHIDButtons];
 }
 
 - (BOOL) isShortcutRegistered: (MASShortcut*) shortcut
 {
+    if (shortcut.isHIDShortcut) {
+        return [[MASHIDMonitor sharedMonitor] isHIDButtonRegistered:shortcut.hidButtonIdentifier];
+    }
     return !![_hotKeys objectForKey:shortcut];
 }
 
@@ -88,10 +121,18 @@ static OSStatus MASCarbonEventCallback(EventHandlerCallRef, EventRef, void*);
         return;
     }
 
+    UInt32 eventKind = GetEventKind(event);
+
     [_hotKeys enumerateKeysAndObjectsUsingBlock:^(MASShortcut *shortcut, MASHotKey *hotKey, BOOL *stop) {
         if (hotKeyID.id == [hotKey carbonID]) {
-            if ([hotKey action]) {
-                dispatch_async(dispatch_get_main_queue(), [hotKey action]);
+            if (eventKind == kEventHotKeyPressed) {
+                if ([hotKey action]) {
+                    dispatch_async(dispatch_get_main_queue(), [hotKey action]);
+                }
+            } else if (eventKind == kEventHotKeyReleased) {
+                if ([hotKey keyUpAction]) {
+                    dispatch_async(dispatch_get_main_queue(), [hotKey keyUpAction]);
+                }
             }
             *stop = YES;
         }

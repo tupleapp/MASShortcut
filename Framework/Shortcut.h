@@ -1,6 +1,8 @@
 #import "MASKeyMasks.h"
+#import "MASHIDButtonIdentifier.h"
 #import "MASShortcut.h"
 #import "MASShortcutValidator.h"
+#import "MASHIDMonitor.h"
 #import "MASShortcutMonitor.h"
 #import "MASShortcutBinder.h"
 #import "MASDictionaryTransformer.h"

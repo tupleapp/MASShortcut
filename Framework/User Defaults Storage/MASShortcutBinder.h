@@ -46,6 +46,7 @@
  pressing it will always trigger the given action.
 */
 - (void) bindShortcutWithDefaultsKey: (NSString*) defaultsKeyName toAction: (dispatch_block_t) action;
+- (void) bindShortcutWithDefaultsKey: (NSString*) defaultsKeyName toKeyDownAction: (dispatch_block_t) keyDown keyUpAction: (dispatch_block_t) keyUp;
 
 /**
  Disconnect the binding between user defaults and action.

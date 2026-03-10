@@ -1,5 +1,6 @@
 #import "MASShortcutView.h"
 #import "MASShortcutValidator.h"
+#import "MASHIDMonitor.h"
 #import "MASLocalization.h"
 
 NSString *const MASShortcutBinding = @"shortcutValue";
@@ -200,6 +201,8 @@ static const CGFloat MASButtonFontSize = 11;
     _shortcutCell.alignment = alignment;
     _shortcutCell.state = state;
     _shortcutCell.enabled = self.enabled;
+    
+    _shortcutCell.lineBreakMode = NSLineBreakByTruncatingMiddle;
 
     switch (_style) {
         case MASShortcutViewStyleDefault: {
@@ -255,7 +258,7 @@ static const CGFloat MASButtonFontSize = 11;
                                ? MASLocalizedString(@"Cancel", @"Cancel action button in recording state")
                                : (self.shortcutPlaceholder.length > 0
                                   ? self.shortcutPlaceholder
-                                  : MASLocalizedString(@"Type Shortcut", @"Empty shortcut button in recording state")));
+                                  : MASLocalizedString(@"Type New Shortcut", @"Empty shortcut button in recording state")));
             [self drawInRect:shortcutRect withTitle:title alignment:NSTextAlignmentCenter state:NSOnState];
         }
         else
@@ -430,10 +433,10 @@ void *kUserDataHint = &kUserDataHint;
     static BOOL isActive = NO;
     if (isActive == shouldActivate) return;
     isActive = shouldActivate;
-    
+
     static id eventMonitor = nil;
     if (shouldActivate) {
-        __unsafe_unretained MASShortcutView *weakSelf = self;
+        __weak MASShortcutView *weakSelf = self;
         NSEventMask eventMask = (NSEventMaskKeyDown | NSEventMaskFlagsChanged);
         eventMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:eventMask handler:^(NSEvent *event) {
 
@@ -504,9 +507,18 @@ void *kUserDataHint = &kUserDataHint;
             }
             return event;
         }];
+
+        // Start parallel HID capture — first input (keyboard or HID) wins
+        [[MASHIDMonitor sharedMonitor] captureNextButtonPress:^(MASHIDButtonIdentifier *identifier) {
+            MASShortcut *hidShortcut = [MASShortcut shortcutWithHIDButton:identifier];
+            weakSelf.shortcutValue = hidShortcut;
+            weakSelf.recording = NO;
+        }];
     }
     else {
         [NSEvent removeMonitor:eventMonitor];
+        // Cancel HID capture when deactivating
+        [[MASHIDMonitor sharedMonitor] captureNextButtonPress:nil];
     }
 }
 
@@ -519,7 +531,7 @@ void *kUserDataHint = &kUserDataHint;
     static id observer = nil;
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     if (shouldActivate) {
-        __unsafe_unretained MASShortcutView *weakSelf = self;
+        __weak MASShortcutView *weakSelf = self;
         observer = [notificationCenter addObserverForName:NSWindowDidResignKeyNotification object:self.window
                                                 queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notification) {
                                                     weakSelf.recording = NO;

@@ -6,6 +6,7 @@ extern FourCharCode const MASHotKeySignature;
 
 @property(readonly) UInt32 carbonID;
 @property(copy) dispatch_block_t action;
+@property(copy) dispatch_block_t keyUpAction;
 
 + (instancetype) registeredHotKeyWithShortcut: (MASShortcut*) shortcut;
 
